@@ -1,0 +1,11 @@
+node_modules/
+artifacts/
+cache/
+fhevmTemp/
+coverage/
+types/
+.env
+.env.local
+frontend/.next/
+frontend/node_modules/
+work/
