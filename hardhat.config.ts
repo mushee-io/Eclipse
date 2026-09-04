@@ -9,7 +9,6 @@ import "solidity-coverage";
 const localMnemonic =
   process.env.MNEMONIC ??
   "test test test test test test test test test test test junk";
-
 const sepoliaRpcUrl = process.env.SEPOLIA_RPC_URL?.trim() ?? "";
 const sepoliaPrivateKey = process.env.SEPOLIA_PRIVATE_KEY?.trim() ?? "";
 const sepoliaRequested = process.argv.includes("sepolia");

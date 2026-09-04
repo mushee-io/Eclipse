@@ -10,7 +10,10 @@ contract EclipseSepoliaProbe is ZamaEthereumConfig {
 
     event EncryptedValueStored(address indexed account);
 
-    function storeEncryptedAmount(externalEuint64 encryptedAmount, bytes calldata inputProof) external {
+    function storeEncryptedAmount(
+        externalEuint64 encryptedAmount,
+        bytes calldata inputProof
+    ) external {
         euint64 value = FHE.fromExternal(encryptedAmount, inputProof);
         _value[msg.sender] = value;
         FHE.allowThis(value);
@@ -18,7 +21,9 @@ contract EclipseSepoliaProbe is ZamaEthereumConfig {
         emit EncryptedValueStored(msg.sender);
     }
 
-    function getEncryptedAmountHandle(address account) external view returns (euint64) {
+    function getEncryptedAmountHandle(
+        address account
+    ) external view returns (euint64) {
         return _value[account];
     }
 }

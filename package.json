@@ -15,7 +15,11 @@
     "format": "prettier --plugin=prettier-plugin-solidity --write \"**/*.{json,md,sol,ts,yml}\"",
     "format:check": "prettier --plugin=prettier-plugin-solidity --check \"**/*.{json,md,sol,ts,yml}\"",
     "deploy:sepolia": "hardhat run scripts/deploy.ts --network sepolia",
+    "check:sepolia": "hardhat run scripts/sepolia/check-env.ts --network sepolia",
     "deploy:sepolia:probe": "hardhat run scripts/sepolia/deploy-probe.ts --network sepolia",
+    "deploy:sepolia:vault": "node scripts/sepolia/deploy-vault.mjs",
+    "deposit:sepolia:vault": "node scripts/sepolia/deposit-vault.mjs",
+    "decrypt:sepolia:vault": "node scripts/sepolia/decrypt-vault.mjs",
     "deploy:local": "hardhat run scripts/deployLocal.ts"
   },
   "dependencies": {

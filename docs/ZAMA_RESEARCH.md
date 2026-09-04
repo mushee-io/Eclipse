@@ -24,6 +24,7 @@ This note records the implementation baseline before Eclipse core contracts are 
 - Bounded encrypted randomness is available as `FHE.randEuint64(uint64 upperBound)`, producing a hidden value in `[0, upperBound)`. The public upper bound is `MAX_POOL_CAPACITY`, never encrypted TVL.
 - Every ciphertext persisted for future computation needs `FHE.allowThis(value)`. A user-returned handle needs `FHE.allow(value, user)`. Cross-contract execution requires explicit grants to each receiving contract, with the final interface verified against the chosen ERC-7984 release.
 - User decryption is not public decryption. The browser fetches an authorized ciphertext handle, creates a NaCl keypair, signs the relayer's EIP-712 authorization with the user's wallet, then calls `instance.userDecrypt(...)`. Plaintext stays in volatile browser state.
+- **Verified against `@zama-fhe/relayer-sdk` 0.4.1:** `createEIP712` and `userDecrypt` require numeric `startTimestamp` and `durationDays`; older documentation examples pass strings and trigger `InvalidTypeError` in this release.
 - FHE operations consume a per-transaction operation budget (the prior per-block model is obsolete). Eclipse therefore uses a fixed upper bound per `processDrawBatch`, records progress, and never uses an unbounded loop.
 
 ## Sepolia deployment facts
