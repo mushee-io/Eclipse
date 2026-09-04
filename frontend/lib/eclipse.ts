@@ -12,7 +12,7 @@ type EthereumProvider = {
 };
 type Eip6963Detail = { info: { rdns?: string; name?: string }; provider: EthereumProvider };
 type HexHandle = `0x${string}`;
-type RelayerSdk = typeof import("@zama-fhe/relayer-sdk/bundle");
+type RelayerSdk = typeof import("@zama-fhe/relayer-sdk/web");
 type FheInstance = Awaited<ReturnType<RelayerSdk["createInstance"]>>;
 
 declare global { interface Window { ethereum?: EthereumProvider } }
@@ -78,10 +78,14 @@ export async function switchToSepolia() {
 export async function fhe() {
   if (!fhePromise) {
     fhePromise = (async () => {
-      const sdk = await import("@zama-fhe/relayer-sdk/bundle");
-      await sdk.initSDK();
+      const sdk = await import("@zama-fhe/relayer-sdk/web");
+      const initialized = await sdk.initSDK();
+      if (!initialized) throw new Error("Zama FHE SDK failed to initialize.");
       return sdk.createInstance({ ...sdk.SepoliaConfig, network: PUBLIC_SEPOLIA_RPC });
-    })();
+    })().catch((error) => {
+      fhePromise = undefined;
+      throw error;
+    });
   }
   return fhePromise;
 }
@@ -171,9 +175,10 @@ export function friendlyError(error: unknown) {
   if (/user rejected|denied/i.test(message) || code === "4001") return "The wallet request was cancelled.";
   if (/already processing|request.*pending|pending request/i.test(message) || code === "-32002") return "A wallet connection request is already open. Click the MetaMask fox icon and finish or cancel it, then try again.";
   if (/install a browser wallet|no provider|ethereum is not defined/i.test(message)) return "No compatible browser wallet was detected. Install or unlock MetaMask and try again.";
+  if (/fhe sdk failed|initsdk|wasm/i.test(message)) return `Zama encryption failed to initialize: ${message}`;
   if (/insufficient funds/i.test(message)) return "You need Sepolia ETH for gas.";
   if (/draw is being finalized|withdrawals.*reopen/i.test(message)) return "A draw is being finalized. Withdrawals reopen after finalization.";
   if (/network|chain/i.test(message)) return "Switch to Ethereum Sepolia and try again.";
   if (/participate/i.test(message)) return "This wallet did not participate in this draw.";
-  return `Wallet request failed${code ? ` (${code})` : ""}${message && message !== "[object Object]" ? `: ${message.slice(0, 220)}` : ". Please try again."}`;
+  return `Request failed${code ? ` (${code})` : ""}${message && message !== "[object Object]" ? `: ${message.slice(0, 220)}` : ". Please try again."}`;
 }
