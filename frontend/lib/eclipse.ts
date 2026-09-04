@@ -5,6 +5,7 @@ import { createInstance, initSDK, SepoliaConfig } from "@zama-fhe/relayer-sdk/bu
 import { CONTRACTS, CUSDT_ABI, DRAW_ABI, DRAW_ID, PUBLIC_SEPOLIA_RPC, SEPOLIA_CHAIN_HEX, TOKEN_DECIMALS, USDT_ABI, VAULT_ABI } from "./contracts";
 
 type EthereumProvider = { request(args: { method: string; params?: unknown[] | object }): Promise<unknown>; on?: (event: string, cb: (...args: unknown[]) => void) => void; removeListener?: (event: string, cb: (...args: unknown[]) => void) => void };
+type HexHandle = `0x${string}`;
 
 declare global { interface Window { ethereum?: EthereumProvider } }
 
@@ -41,7 +42,7 @@ export async function encrypt64(contractAddress: string, userAddress: string, va
   return instance.createEncryptedInput(contractAddress, userAddress).add64(value).encrypt();
 }
 
-async function decryptHandles(userAddress: string, entries: { handle: string; contractAddress: string }[]) {
+async function decryptHandles(userAddress: string, entries: { handle: HexHandle; contractAddress: string }[]) {
   const instance = await fhe();
   const wallet = await signer();
   const keypair = instance.generateKeypair();
@@ -57,7 +58,7 @@ async function decryptHandles(userAddress: string, entries: { handle: string; co
 export async function unlockPrincipal(userAddress: string) {
   const provider = await browserProvider();
   const vault = new Contract(CONTRACTS.vault, VAULT_ABI, provider);
-  const handle = String(await vault.principalOf(userAddress));
+  const handle = String(await vault.principalOf(userAddress)) as HexHandle;
   if (/^0x0{64}$/i.test(handle)) return { raw: 0n, formatted: "0.0" };
   const values = await decryptHandles(userAddress, [{ handle, contractAddress: CONTRACTS.vault }]);
   const raw = BigInt(values[handle] as bigint | number | string);
@@ -106,11 +107,13 @@ function asBool(value: unknown) {
 
 export async function unlockDrawResult(userAddress: string) {
   const wallet = await signer(); const draw = new Contract(CONTRACTS.draw, DRAW_ABI, wallet);
-  const [wonHandle, prizeHandle] = await draw.encryptedResultOf(DRAW_ID, userAddress);
+  const [wonRaw, prizeRaw] = await draw.encryptedResultOf(DRAW_ID, userAddress);
+  const wonHandle = String(wonRaw) as HexHandle;
+  const prizeHandle = String(prizeRaw) as HexHandle;
   if (BigInt(wonHandle) === 0n || BigInt(prizeHandle) === 0n) throw new Error("This wallet did not participate in Draw #1.");
   const auth = await draw.authorizeMyResult(DRAW_ID); await auth.wait();
-  const values = await decryptHandles(userAddress, [{ handle: String(wonHandle), contractAddress: CONTRACTS.draw }, { handle: String(prizeHandle), contractAddress: CONTRACTS.draw }]);
-  return { won: asBool(values[String(wonHandle)]), prize: formatUnits(BigInt(values[String(prizeHandle)] as bigint | number | string), TOKEN_DECIMALS) };
+  const values = await decryptHandles(userAddress, [{ handle: wonHandle, contractAddress: CONTRACTS.draw }, { handle: prizeHandle, contractAddress: CONTRACTS.draw }]);
+  return { won: asBool(values[wonHandle]), prize: formatUnits(BigInt(values[prizeHandle] as bigint | number | string), TOKEN_DECIMALS) };
 }
 
 export function friendlyError(error: unknown) {
