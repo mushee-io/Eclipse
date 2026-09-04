@@ -5,10 +5,16 @@ import { ethers } from "ethers";
 const RPC_URL = process.env.SEPOLIA_RPC_URL;
 const PRIVATE_KEY = process.env.SEPOLIA_PRIVATE_KEY;
 const CUSDT_MOCK = "0x4E7B06D78965594eB5EF5414c357ca21E1554491";
-const MAX_POOL_CAPACITY = 1_000_000_000n; // 1,000 cUSDT at six decimals.
+const MAX_POOL_CAPACITY = 1_073_741_824n; // 2^30 atomic units; required by bounded FHE RNG.
 
 if (!RPC_URL || !PRIVATE_KEY) {
   throw new Error("SEPOLIA_RPC_URL and SEPOLIA_PRIVATE_KEY must be configured in .env");
+}
+if (
+  MAX_POOL_CAPACITY === 0n ||
+  (MAX_POOL_CAPACITY & (MAX_POOL_CAPACITY - 1n)) !== 0n
+) {
+  throw new Error("Vault draw capacity must be a positive power of two");
 }
 
 const artifact = JSON.parse(

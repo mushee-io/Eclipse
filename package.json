@@ -20,6 +20,8 @@
     "deploy:sepolia:vault": "node scripts/sepolia/deploy-vault.mjs",
     "deposit:sepolia:vault": "node scripts/sepolia/deposit-vault.mjs",
     "decrypt:sepolia:vault": "node scripts/sepolia/decrypt-vault.mjs",
+    "migrate:sepolia:vault": "node scripts/sepolia/migrate-bootstrap-vault.mjs",
+    "deploy:sepolia:draw-system": "node scripts/sepolia/deploy-draw-system.mjs",
     "deploy:local": "hardhat run scripts/deployLocal.ts"
   },
   "dependencies": {

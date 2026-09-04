@@ -1,0 +1,37 @@
+import "dotenv/config";
+import { readFile } from "node:fs/promises";
+import { ethers } from "ethers";
+
+const RPC_URL = process.env.SEPOLIA_RPC_URL;
+const PRIVATE_KEY = process.env.SEPOLIA_PRIVATE_KEY;
+const VAULT = process.env.ECLIPSE_SEPOLIA_VAULT_ADDRESS;
+const ASSET = "0x4E7B06D78965594eB5EF5414c357ca21E1554491";
+if (!RPC_URL || !PRIVATE_KEY || !VAULT) throw new Error("Missing local Sepolia configuration");
+const provider = new ethers.JsonRpcProvider(RPC_URL);
+const signer = new ethers.Wallet(PRIVATE_KEY, provider);
+const artifact = async (name) => JSON.parse(await readFile(`artifacts/contracts/${name}.sol/${name}.json`, "utf8"));
+const deploy = async (name, args) => {
+  const a = await artifact(name);
+  const c = await new ethers.ContractFactory(a.abi, a.bytecode, signer).deploy(...args);
+  const tx = c.deploymentTransaction();
+  const receipt = await tx.wait();
+  if (!receipt || receipt.status !== 1) throw new Error(`${name} deployment reverted`);
+  return [c, tx.hash, receipt.blockNumber];
+};
+const [reserve, reserveTx, reserveBlock] = await deploy("PrizeReserve", [ASSET, signer.address]);
+const [simulator, simulatorTx, simulatorBlock] = await deploy("SepoliaYieldSimulator", [ASSET, await reserve.getAddress()]);
+const [draw, drawTx, drawBlock] = await deploy("EclipseDraw", [VAULT, await reserve.getAddress()]);
+const vault = new ethers.Contract(VAULT, ["function setDrawController(address) external", "function maxPoolCapacity() view returns (uint64)", "function drawController() view returns (address)"], signer);
+const reserveAdmin = reserve.connect(signer);
+const adapterTx = await reserveAdmin.setYieldAdapter(await simulator.getAddress()); await adapterTx.wait();
+const drawConfigTx = await reserveAdmin.setDraw(await draw.getAddress()); await drawConfigTx.wait();
+const vaultConfigTx = await vault.setDrawController(await draw.getAddress()); await vaultConfigTx.wait();
+if ((await vault.drawController()).toLowerCase() !== (await draw.getAddress()).toLowerCase()) throw new Error("Vault draw wiring failed");
+if ((await reserve.draw()).toLowerCase() !== (await draw.getAddress()).toLowerCase()) throw new Error("Reserve draw wiring failed");
+if ((await reserve.yieldAdapter()).toLowerCase() !== (await simulator.getAddress()).toLowerCase()) throw new Error("Reserve adapter wiring failed");
+console.log(`PRIZE RESERVE: ${await reserve.getAddress()} ${reserveTx} block ${reserveBlock}`);
+console.log(`YIELD SIMULATOR: ${await simulator.getAddress()} ${simulatorTx} block ${simulatorBlock}`);
+console.log(`DRAW: ${await draw.getAddress()} ${drawTx} block ${drawBlock}`);
+console.log(`CONFIG ADAPTER TX: ${adapterTx.hash}`);
+console.log(`CONFIG DRAW TX: ${drawConfigTx.hash}`);
+console.log(`CONFIG VAULT TX: ${vaultConfigTx.hash}`);

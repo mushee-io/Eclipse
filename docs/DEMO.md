@@ -55,6 +55,25 @@ The four callback transactions are retained as complete execution evidence. Two 
 npm run decrypt:sepolia:vault
 ```
 
+## Live Dark Capacity Draw — Ethereum Sepolia
+
+The production-candidate stack completed one real multi-user confidential draw on Ethereum Sepolia.
+
+| Action                 | Transaction                                                                                                                                                                |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| B confidential deposit | [`0x2787978b973ab1005a0003b8351d00c381062710f8c5656f4b770154e9861542`](https://sepolia.etherscan.io/tx/0x2787978b973ab1005a0003b8351d00c381062710f8c5656f4b770154e9861542) |
+| C confidential deposit | [`0xb1f562a6aee3a07996acca45967b3f8d64e1feab53a937f29636b0afaa86e27a`](https://sepolia.etherscan.io/tx/0xb1f562a6aee3a07996acca45967b3f8d64e1feab53a937f29636b0afaa86e27a) |
+| Yield contribution     | [`0x56d805ecd10bf2c820f5e76745125168a0186fb32c6b13c07b51f5b8d0393a21`](https://sepolia.etherscan.io/tx/0x56d805ecd10bf2c820f5e76745125168a0186fb32c6b13c07b51f5b8d0393a21) |
+| Start draw             | [`0xca2a6197cb220d272475742cbed1d04a92d280218d1605efbfd74b49b198e46e`](https://sepolia.etherscan.io/tx/0xca2a6197cb220d272475742cbed1d04a92d280218d1605efbfd74b49b198e46e) |
+| Begin processing       | [`0xa50367847b1a75fa556991ce9ada0ad2e777cf4048ab2c109bd7ef8a2562e9ea`](https://sepolia.etherscan.io/tx/0xa50367847b1a75fa556991ce9ada0ad2e777cf4048ab2c109bd7ef8a2562e9ea) |
+| Encrypted batch        | [`0xc01220efe3b2f8eb95e99e872949f6841096e66b033136d69963fb4b42e31647`](https://sepolia.etherscan.io/tx/0xc01220efe3b2f8eb95e99e872949f6841096e66b033136d69963fb4b42e31647) |
+| Finalize draw          | [`0x9472f38a61caceca4ee29544b8ce29d6f9463adc088bb076b3bd85e61c5b1d28`](https://sepolia.etherscan.io/tx/0x9472f38a61caceca4ee29544b8ce29d6f9463adc088bb076b3bd85e61c5b1d28) |
+| Principal withdrawal   | [`0x754a8fe6a18ae08df00a13ddf2556b739ef19b717c4c14c0c140dec2215f2fa1`](https://sepolia.etherscan.io/tx/0x754a8fe6a18ae08df00a13ddf2556b739ef19b717c4c14c0c140dec2215f2fa1) |
+
+The canonical vault is [`0x7eE4B6dE21e14ab3a4A0c14d7430742667Ba703f`](https://sepolia.etherscan.io/address/0x7eE4B6dE21e14ab3a4A0c14d7430742667Ba703f); the yield simulator is [`0x863d0b6D8D76744C60Cc805E26FE83F0616691D8`](https://sepolia.etherscan.io/address/0x863d0b6D8D76744C60Cc805E26FE83F0616691D8); the reserve is [`0x9287C4cc8c45e4beFe7B86a24735dd9fd0ee3744`](https://sepolia.etherscan.io/address/0x9287C4cc8c45e4beFe7B86a24735dd9fd0ee3744); and the draw is [`0x60c5bb2c218aD32415A69368d681B36A33ef7d3e`](https://sepolia.etherscan.io/address/0x60c5bb2c218ad32415a69368d681b36a33ef7d3e).
+
+Three real Sepolia participants deposited canonical confidential cUSDT. The public draw domain was `1,073,741,824` atomic units (`2^30`); Zama `FHE.randEuint64(2^30)` generated the encrypted random position. TVL, randomness, cumulative ranges, winner, Shadow result, and prize amount were never publicly decrypted. All three participants used the same public claim path and successfully performed authorized user-specific result decryption. Principal remained isolated from prize liquidity and was withdrawn after finalization.
+
 ## Real Zama Sepolia Proof
 
 Completed on Ethereum Sepolia (chain ID `11155111`) on 4 September 2026.
