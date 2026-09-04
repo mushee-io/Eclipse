@@ -1,16 +1,16 @@
 "use client";
 
 import { BrowserProvider, Contract, formatUnits, parseUnits } from "ethers";
-import { createInstance, initSDK, SepoliaConfig } from "@zama-fhe/relayer-sdk/bundle";
 import { CONTRACTS, CUSDT_ABI, DRAW_ABI, DRAW_ID, PUBLIC_SEPOLIA_RPC, SEPOLIA_CHAIN_HEX, TOKEN_DECIMALS, USDT_ABI, VAULT_ABI } from "./contracts";
 
 type EthereumProvider = { request(args: { method: string; params?: unknown[] | object }): Promise<unknown>; on?: (event: string, cb: (...args: unknown[]) => void) => void; removeListener?: (event: string, cb: (...args: unknown[]) => void) => void };
 type HexHandle = `0x${string}`;
+type RelayerSdk = typeof import("@zama-fhe/relayer-sdk/bundle");
+type FheInstance = Awaited<ReturnType<RelayerSdk["createInstance"]>>;
 
 declare global { interface Window { ethereum?: EthereumProvider } }
 
-let fhePromise: ReturnType<typeof createInstance> | undefined;
-let sdkReady: ReturnType<typeof initSDK> | undefined;
+let fhePromise: Promise<FheInstance> | undefined;
 
 export function ethereum() {
   if (typeof window === "undefined" || !window.ethereum) throw new Error("Install a browser wallet such as MetaMask to continue.");
@@ -31,9 +31,13 @@ export async function switchToSepolia() {
 }
 
 export async function fhe() {
-  if (!sdkReady) sdkReady = initSDK();
-  await sdkReady;
-  if (!fhePromise) fhePromise = createInstance({ ...SepoliaConfig, network: PUBLIC_SEPOLIA_RPC });
+  if (!fhePromise) {
+    fhePromise = (async () => {
+      const sdk = await import("@zama-fhe/relayer-sdk/bundle");
+      await sdk.initSDK();
+      return sdk.createInstance({ ...sdk.SepoliaConfig, network: PUBLIC_SEPOLIA_RPC });
+    })();
+  }
   return fhePromise;
 }
 
