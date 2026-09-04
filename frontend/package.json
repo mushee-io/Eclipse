@@ -11,7 +11,7 @@
   "dependencies": {
     "@zama-fhe/relayer-sdk": "0.4.1",
     "ethers": "6.16.0",
-    "next": "15.5.2",
+    "next": "15.5.24",
     "react": "19.1.1",
     "react-dom": "19.1.1"
   },
