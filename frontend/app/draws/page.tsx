@@ -1,0 +1,2 @@
+import Link from "next/link";
+export default function Draws(){return <section className="page"><p className="eyebrow">CONFIDENTIAL DRAWS</p><h1 className="page-title">THE DRAW IS PUBLIC.<br/>THE OUTCOME IS NOT.</h1><Link className="draw-row" href="/draws/1"><div><span>DRAW #1</span><strong>FINALIZED</strong></div><div><span>PUBLIC CAPACITY</span><strong>1,073.74 cUSDT</strong></div><div><span>TOTAL / PRIZE / WINNER</span><strong>ENCRYPTED</strong></div><b>VIEW VERIFIED DRAW →</b></Link></section>}
