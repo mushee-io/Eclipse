@@ -3,7 +3,13 @@
 import { BrowserProvider, Contract, formatUnits, parseUnits } from "ethers";
 import { CONTRACTS, CUSDT_ABI, DRAW_ABI, DRAW_ID, PUBLIC_SEPOLIA_RPC, SEPOLIA_CHAIN_HEX, TOKEN_DECIMALS, USDT_ABI, VAULT_ABI } from "./contracts";
 
-type EthereumProvider = { request(args: { method: string; params?: unknown[] | object }): Promise<unknown>; on?: (event: string, cb: (...args: unknown[]) => void) => void; removeListener?: (event: string, cb: (...args: unknown[]) => void) => void };
+type EthereumProvider = {
+  request(args: { method: string; params?: unknown[] | object }): Promise<unknown>;
+  on?: (event: string, cb: (...args: unknown[]) => void) => void;
+  removeListener?: (event: string, cb: (...args: unknown[]) => void) => void;
+  providers?: EthereumProvider[];
+  isMetaMask?: boolean;
+};
 type HexHandle = `0x${string}`;
 type RelayerSdk = typeof import("@zama-fhe/relayer-sdk/bundle");
 type FheInstance = Awaited<ReturnType<RelayerSdk["createInstance"]>>;
@@ -14,7 +20,11 @@ let fhePromise: Promise<FheInstance> | undefined;
 
 export function ethereum() {
   if (typeof window === "undefined" || !window.ethereum) throw new Error("Install a browser wallet such as MetaMask to continue.");
-  return window.ethereum;
+  const injected = window.ethereum;
+  if (Array.isArray(injected.providers) && injected.providers.length) {
+    return injected.providers.find((provider) => provider.isMetaMask) ?? injected.providers[0];
+  }
+  return injected;
 }
 
 export async function browserProvider() { return new BrowserProvider(ethereum() as never); }
@@ -123,9 +133,11 @@ export async function unlockDrawResult(userAddress: string) {
 export function friendlyError(error: unknown) {
   const message = error instanceof Error ? error.message : String(error);
   if (/user rejected|denied/i.test(message)) return "The wallet request was cancelled.";
+  if (/already processing|request.*pending|pending request/i.test(message)) return "A wallet connection request is already open. Check your wallet extension.";
+  if (/install a browser wallet|no provider|ethereum is not defined/i.test(message)) return "No compatible browser wallet was detected. Install or unlock MetaMask and try again.";
   if (/insufficient funds/i.test(message)) return "You need Sepolia ETH for gas.";
   if (/draw is being finalized|withdrawals.*reopen/i.test(message)) return "A draw is being finalized. Withdrawals reopen after finalization.";
   if (/network|chain/i.test(message)) return "Switch to Ethereum Sepolia and try again.";
   if (/participate/i.test(message)) return "This wallet did not participate in this draw.";
-  return "The request could not be completed. Please try again.";
+  return `Wallet request failed${message && message !== "[object Object]" ? `: ${message.slice(0, 180)}` : ". Please try again."}`;
 }
