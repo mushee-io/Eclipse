@@ -2,35 +2,49 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { browserProvider, friendlyError, switchToSepolia } from "../lib/eclipse";
+import { browserProvider, discoverWalletProvider, friendlyError, switchToSepolia } from "../lib/eclipse";
 import { SEPOLIA_CHAIN_ID } from "../lib/contracts";
 
 export function Shell({ children }: { children: React.ReactNode }) {
   const [address, setAddress] = useState<string>();
   const [chain, setChain] = useState<number>();
   const [error, setError] = useState("");
+
   const sync = useCallback(async () => {
     try {
-      if (!window.ethereum) return;
       const provider = await browserProvider();
       const accounts = await provider.send("eth_accounts", []);
       const network = await provider.getNetwork();
       setAddress(accounts[0]);
       setChain(Number(network.chainId));
-    } catch { /* disconnected */ }
+    } catch {
+      setAddress(undefined);
+      setChain(undefined);
+    }
   }, []);
+
   useEffect(() => {
-    sync();
-    const p = window.ethereum;
-    const listener = () => { setAddress(undefined); sync(); };
-    p?.on?.("accountsChanged", listener);
-    p?.on?.("chainChanged", listener);
+    let activeProvider: Awaited<ReturnType<typeof discoverWalletProvider>> | undefined;
+    const listener = () => { setAddress(undefined); void sync(); };
+
+    void (async () => {
+      try {
+        activeProvider = await discoverWalletProvider();
+        activeProvider.on?.("accountsChanged", listener);
+        activeProvider.on?.("chainChanged", listener);
+        await sync();
+      } catch {
+        // No wallet installed/available yet. The dashboard handles connect messaging.
+      }
+    })();
+
     return () => {
-      p?.removeListener?.("accountsChanged", listener);
-      p?.removeListener?.("chainChanged", listener);
+      activeProvider?.removeListener?.("accountsChanged", listener);
+      activeProvider?.removeListener?.("chainChanged", listener);
     };
   }, [sync]);
-  const wrong = address && chain !== SEPOLIA_CHAIN_ID;
+
+  const wrong = Boolean(address) && chain !== SEPOLIA_CHAIN_ID;
   return <main className="site-shell">
     <nav className="nav">
       <Link className="wordmark" href="/">ECLIPSE</Link>
