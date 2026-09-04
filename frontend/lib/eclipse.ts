@@ -9,7 +9,7 @@ type EthereumProvider = { request(args: { method: string; params?: unknown[] | o
 declare global { interface Window { ethereum?: EthereumProvider } }
 
 let fhePromise: ReturnType<typeof createInstance> | undefined;
-let sdkReady: Promise<void> | undefined;
+let sdkReady: ReturnType<typeof initSDK> | undefined;
 
 export function ethereum() {
   if (typeof window === "undefined" || !window.ethereum) throw new Error("Install a browser wallet such as MetaMask to continue.");
