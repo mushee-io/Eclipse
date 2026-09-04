@@ -49,7 +49,8 @@ async function decryptHandles(userAddress: string, entries: { handle: string; co
   const startTime = Math.floor(Date.now() / 1000);
   const days = 10;
   const typed = instance.createEIP712(keypair.publicKey, contracts, startTime, days);
-  const signature = await wallet.signTypedData(typed.domain, { UserDecryptRequestVerification: typed.types.UserDecryptRequestVerification }, typed.message);
+  const types = { UserDecryptRequestVerification: [...typed.types.UserDecryptRequestVerification] };
+  const signature = await wallet.signTypedData(typed.domain, types, typed.message);
   return instance.userDecrypt(entries, keypair.privateKey, keypair.publicKey, signature.slice(2), contracts, userAddress, startTime, days);
 }
 
