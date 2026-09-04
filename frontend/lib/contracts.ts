@@ -28,7 +28,13 @@ export const VAULT_ABI = [
 export const DRAW_ABI = [
   "function currentDrawId() view returns (uint256)",
   "function state() view returns (uint8)",
+  "function cursor() view returns (uint256)",
   "function finalized(uint256) view returns (bool)",
+  "function startDraw()",
+  "function beginProcessing()",
+  "function processDrawBatch(uint256)",
+  "function finalizeDraw()",
+  "function openNextDraw()",
   "function encryptedResultOf(uint256,address) view returns (bytes32,bytes32)",
   "function authorizeMyResult(uint256) returns (bytes32,bytes32)",
   "function claimPrize(uint256)",
